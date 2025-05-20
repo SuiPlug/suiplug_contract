@@ -41,7 +41,7 @@ module suiplug::product {
             inventory,
             seller: tx_context::sender(ctx),
         };
-        transfer::share_object(product);
+        transfer::transfer(product, tx_context::sender(ctx));
     }
 
     // Update inventory (called by seller)
@@ -136,36 +136,30 @@ module suiplug::payment {
             buyer: tx_context::sender(ctx),
             seller,
         };
-        transfer::share_object(payment);
+        transfer::transfer(payment, tx_context::sender(ctx));
     }
 
     // Release payment to seller
     public entry fun release_payment(payment: Payment, ctx: &mut TxContext) {
         let Payment { id, sui_balance, usdt_balance, usdc_balance, buyer: _, seller } = payment;
-        if (balance::value(&sui_balance) > 0) {
-            transfer::public_transfer(coin::from_balance(sui_balance, ctx), seller);
-        };
-        if (balance::value(&usdt_balance) > 0) {
-            transfer::public_transfer(coin::from_balance(usdt_balance, ctx), seller);
-        };
-        if (balance::value(&usdc_balance) > 0) {
-            transfer::public_transfer(coin::from_balance(usdc_balance, ctx), seller);
-        };
+        
+        // Always convert balances to coins and transfer them, regardless of value
+        transfer::public_transfer(coin::from_balance(sui_balance, ctx), seller);
+        transfer::public_transfer(coin::from_balance(usdt_balance, ctx), seller);
+        transfer::public_transfer(coin::from_balance(usdc_balance, ctx), seller);
+        
         object::delete(id);
     }
 
     // Refund payment to buyer
     public entry fun refund_payment(payment: Payment, ctx: &mut TxContext) {
         let Payment { id, sui_balance, usdt_balance, usdc_balance, buyer, seller: _ } = payment;
-        if (balance::value(&sui_balance) > 0) {
-            transfer::public_transfer(coin::from_balance(sui_balance, ctx), buyer);
-        };
-        if (balance::value(&usdt_balance) > 0) {
-            transfer::public_transfer(coin::from_balance(usdt_balance, ctx), buyer);
-        };
-        if (balance::value(&usdc_balance) > 0) {
-            transfer::public_transfer(coin::from_balance(usdc_balance, ctx), buyer);
-        };
+        
+        // Always convert balances to coins and transfer them, regardless of value
+        transfer::public_transfer(coin::from_balance(sui_balance, ctx), buyer);
+        transfer::public_transfer(coin::from_balance(usdt_balance, ctx), buyer);
+        transfer::public_transfer(coin::from_balance(usdc_balance, ctx), buyer);
+        
         object::delete(id);
     }
 
@@ -227,7 +221,7 @@ module suiplug::order {
         // Mint NFT for buyer
         let nft = nft::mint_nft(object::id(product), tx_context::sender(ctx), ctx);
         transfer::public_transfer(nft, tx_context::sender(ctx));
-        transfer::share_object(order);
+        transfer::transfer(order, tx_context::sender(ctx));
     }
 
     // Mark order as disputed
@@ -278,7 +272,7 @@ module suiplug::shipment {
             order_id: object::id(order),
             status,
         };
-        transfer::share_object(shipment);
+        transfer::transfer(shipment, tx_context::sender(ctx));
     }
 
     // Confirm delivery and release payment
@@ -344,6 +338,6 @@ module suiplug::review {
             rating,
             comment,
         };
-        transfer::share_object(review);
+        transfer::transfer(review, tx_context::sender(ctx));
     }
 }
