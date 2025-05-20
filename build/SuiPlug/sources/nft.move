@@ -41,7 +41,7 @@ module suiplug::product {
             inventory,
             seller: tx_context::sender(ctx),
         };
-        transfer::share_object(product);
+        transfer::transfer(product, tx_context::sender(ctx));
     }
 
     // Update inventory (called by seller)
@@ -136,7 +136,7 @@ module suiplug::payment {
             buyer: tx_context::sender(ctx),
             seller,
         };
-        transfer::share_object(payment);
+        transfer::transfer(payment, tx_context::sender(ctx));
     }
 
     // Release payment to seller
@@ -221,7 +221,7 @@ module suiplug::order {
         // Mint NFT for buyer
         let nft = nft::mint_nft(object::id(product), tx_context::sender(ctx), ctx);
         transfer::public_transfer(nft, tx_context::sender(ctx));
-        transfer::share_object(order);
+        transfer::transfer(order, tx_context::sender(ctx));
     }
 
     // Mark order as disputed
@@ -272,7 +272,7 @@ module suiplug::shipment {
             order_id: object::id(order),
             status,
         };
-        transfer::share_object(shipment);
+        transfer::transfer(shipment, tx_context::sender(ctx));
     }
 
     // Confirm delivery and release payment
@@ -338,6 +338,6 @@ module suiplug::review {
             rating,
             comment,
         };
-        transfer::share_object(review);
+        transfer::transfer(review, tx_context::sender(ctx));
     }
 }
